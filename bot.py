@@ -15,8 +15,9 @@ def main():
         json={"chat_id": CHAT_ID, "text": text},
         timeout=30
     )
-    response.raise_for_status()
-    print("Telegramga xabar yuborildi!")
+    print("Telegram javobi:", response.text)
+response.raise_for_status()
+print("Telegramga xabar yuborildi!")
 
 if __name__ == "__main__":
     main()
