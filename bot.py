@@ -22,44 +22,21 @@ def main():
     for card in cards:
         link = card.select_one("a[href]")
         title = card.select_one("h6, h4")
-        image = card.select_one("img")
-        price = card.select_one("[data-testid='ad-price']")
 
         if not link or not title:
             continue
 
         ad_url = urljoin("https://www.olx.uz", link["href"])
         ad_title = title.get_text(" ", strip=True)
-        ad_price = price.get_text(" ", strip=True) if price else "Narx ko‘rsatilmagan"
-        photo = image.get("src") if image else None
 
-        text = (
-            f"🏠 {ad_title}\n"
-            f"💰 {ad_price}\n"
-            f"🔗 {ad_url}"
-        )
+        message = f"🏠 {ad_title}\n🔗 {ad_url}"
 
-        api = f"https://api.telegram.org/bot{TOKEN}/"
-
-        if photo:
-            result = requests.post(
-                api + "sendPhoto",
-                data={
-                    "chat_id": CHAT_ID,
-                    "photo": photo,
-                    "caption": text[:1000]
-                },
-                timeout=30
-            )
-            if result.ok:
-                continue
-
-        requests.post(
-            api + "sendMessage",
-            json={"chat_id": CHAT_ID, "text": text},
+        result = requests.post(
+            f"https://api.telegram.org/bot{TOKEN}/sendMessage",
+            json={"chat_id": CHAT_ID, "text": message},
             timeout=30
-        ).raise_for_status()
-
+        )
+        result.raise_for_status()
 
 if __name__ == "__main__":
     main()
