@@ -19,9 +19,14 @@ def main():
     elonlar = data.get("elonlar", [])
 
     channels = [
-        x.strip()
-        for x in os.environ.get("CHANNELS", "").split(",")
-        if x.strip()
+    "@Toshkent_kvartira_ijara_24",
+    "@Toshkent_talabalarga_kvartira",
+    "@Studentlarga_kvartira_arenda_ij",
+    "@Studentlarga_kvartira_arenda_ija",
+    "@Kvartira_bezmakler_studentlarga",
+    "@Toshkent_uy_oldi_sotdi_bozori",
+    "@Toshkent_kvartira_bezmakler_ijar",
+    "@Kvartira_toshkent_maklersiz_aren",
     ]
 
     if not elonlar:
