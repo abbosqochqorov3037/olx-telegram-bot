@@ -19,7 +19,7 @@ CHANNELS = [
     "@Toshkent_talabalarga_kvartira",
     "@Studentlarga_kvartira_arenda_ij",
     "@Studentlarga_kvartira_arenda_ija",
-    "@Kvartira_bezmakler_studentlarga",
+    "@toshkent_bezmakler_kvartira",
     "@Toshkent_uy_oldi_sotdi_bozori",
     "@Toshkent_kvartira_bezmakler_ijar",
     "@Kvartira_toshkent_maklersiz_aren",
