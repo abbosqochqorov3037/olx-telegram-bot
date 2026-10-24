@@ -1,24 +1,83 @@
 import os
+import json
 import requests
+from pathlib import Path
 
 TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
+API = f"https://api.telegram.org/bot{TOKEN}/"
+FILE = Path("elonlar.json")
 
-def main():
-    text = "🤖 OLX bot sinov xabari!"
+def load_data():
+    if FILE.exists():
+        return json.loads(FILE.read_text(encoding="utf-8"))
+    return {"elonlar": []}
 
-    response = requests.post(
-        f"https://api.telegram.org/bot{TOKEN}/sendMessage",
-        json={
-            "chat_id": CHAT_ID,
-            "text": text
-        },
-        timeout=30
+def save_data(data):
+    FILE.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8"
     )
 
-    print("Telegram javobi:", response.text)
-    response.raise_for_status()
-    print("Xabar yuborildi!")
+def send_message(chat_id, text):
+    r = requests.post(
+        API + "sendMessage",
+        json={"chat_id": chat_id, "text": text},
+        timeout=30
+    )
+    return r.json()
+
+def main():
+    offset = None
+    print("Bot ishga tushdi!")
+
+    while True:
+        try:
+            result = requests.get(
+                API + "getUpdates",
+                params={"offset": offset, "timeout": 30},
+                timeout=35
+            ).json()
+
+            for update in result.get("result", []):
+                offset = update["update_id"] + 1
+                msg = update.get("message", {})
+                chat_id = msg.get("chat", {}).get("id")
+                text = msg.get("text", "")
+
+                if not chat_id or not text:
+                    continue
+
+                if text == "/start":
+                    send_message(
+                        chat_id,
+                        "Salom! 🏠\n\n"
+                        "E'lon qo'shish uchun matnni yuboring.\n"
+                        "/royxat — saqlangan e'lonlar"
+                    )
+                elif text == "/royxat":
+                    data = load_data()
+                    if not data["elonlar"]:
+                        send_message(chat_id, "Hali e'lon yo'q.")
+                    else:
+                        send_message(
+                            chat_id,
+                            "\n\n".join(
+                                f"{i+1}. {e}"
+                                for i, e in enumerate(data["elonlar"])
+                            )
+                        )
+                else:
+                    data = load_data()
+                    data["elonlar"].append(text)
+                    save_data(data)
+                    send_message(
+                        chat_id,
+                        "✅ E'lon saqlandi!\n"
+                        f"Jami e'lonlar: {len(data['elonlar'])}"
+                    )
+
+        except Exception as e:
+            print("Xato:", e)
 
 if __name__ == "__main__":
     main()
