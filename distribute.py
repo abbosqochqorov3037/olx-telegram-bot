@@ -1,24 +1,15 @@
 import os
 import json
-import requests
 from pathlib import Path
+from telethon import TelegramClient
 
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+API_ID = int(os.environ["API_ID"])
+API_HASH = os.environ["API_HASH"]
+SESSION = os.environ["TELEGRAM_SESSION"]
+
 FILE = Path("elonlar.json")
 
-def main():
-    if not TOKEN:
-        print("XATO: bot tokeni sozlanmagan")
-        return
-
-    if not FILE.exists():
-        print("elonlar.json topilmadi")
-        return
-
-    data = json.loads(FILE.read_text(encoding="utf-8"))
-    elonlar = data.get("elonlar", [])
-
-    channels = [
+CHANNELS = [
     "@Toshkent_kvartira_ijara_24",
     "@Toshkent_talabalarga_kvartira",
     "@Studentlarga_kvartira_arenda_ij",
@@ -27,39 +18,33 @@ def main():
     "@Toshkent_uy_oldi_sotdi_bozori",
     "@Toshkent_kvartira_bezmakler_ijar",
     "@Kvartira_toshkent_maklersiz_aren",
-    ]
+]
+
+async def main():
+    if not FILE.exists():
+        print("elonlar.json topilmadi")
+        return
+
+    data = json.loads(FILE.read_text(encoding="utf-8"))
+    elonlar = data.get("elonlar", [])
 
     if not elonlar:
         print("Saqlangan e'lon yo'q")
         return
 
-    if not channels:
-        print("Kanallar ro'yxati sozlanmagan")
-        return
-
-    api = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-
-    for kanal in channels:
-        for elon in elonlar:
-            try:
-                r = requests.post(
-                    api,
-                    json={
-                        "chat_id": kanal,
-                        "text": elon
-                    },
-                    timeout=30
-                )
-                result = r.json()
-
-                if result.get("ok"):
-                    print(f"Yuborildi: {kanal}")
-                else:
-                    print(f"Yuborilmadi: {kanal}: "
-                          f"{result.get('description')}")
-
-            except Exception as e:
-                print(f"Xato: {kanal}: {e}")
+    async with TelegramClient(
+        "user_session",
+        API_ID,
+        API_HASH
+    ) as client:
+        for channel in CHANNELS:
+            for elon in elonlar:
+                try:
+                    await client.send_message(channel, elon)
+                    print(f"Yuborildi: {channel}")
+                except Exception as e:
+                    print(f"Yuborilmadi: {channel}: {e}")
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
