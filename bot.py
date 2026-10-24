@@ -7,10 +7,12 @@ TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 API = f"https://api.telegram.org/bot{TOKEN}/"
 FILE = Path("elonlar.json")
 
+
 def load_data():
     if FILE.exists():
         return json.loads(FILE.read_text(encoding="utf-8"))
     return {"elonlar": []}
+
 
 def save_data(data):
     FILE.write_text(
@@ -18,13 +20,16 @@ def save_data(data):
         encoding="utf-8"
     )
 
+
 def send_message(chat_id, text):
-    r = requests.post(
+    response = requests.post(
         API + "sendMessage",
         json={"chat_id": chat_id, "text": text},
         timeout=30
     )
-    return r.json()
+    response.raise_for_status()
+    return response.json()
+
 
 def main():
     offset = None
@@ -38,11 +43,15 @@ def main():
                 timeout=35
             ).json()
 
+            if not result.get("ok"):
+                print("Telegram API xatosi:", result)
+                continue
+
             for update in result.get("result", []):
                 offset = update["update_id"] + 1
                 msg = update.get("message", {})
                 chat_id = msg.get("chat", {}).get("id")
-                text = msg.get("text", "")
+                text = msg.get("text", "").strip()
 
                 if not chat_id or not text:
                     continue
@@ -51,33 +60,30 @@ def main():
                     send_message(
                         chat_id,
                         "Salom! 🏠\n\n"
-                        "E'lon qo'shish uchun matnni yuboring.\n"
-                        "/royxat — saqlangan e'lonlar"
+                        "Kvartira e'lonini matn ko'rinishida yuboring.\n"
+                        "/royxat — saqlangan e'lonlar soni."
                     )
+
                 elif text == "/royxat":
                     data = load_data()
-                    if not data["elonlar"]:
-                        send_message(chat_id, "Hali e'lon yo'q.")
-                    else:
-                        send_message(
-                            chat_id,
-                            "\n\n".join(
-                                f"{i+1}. {e}"
-                                for i, e in enumerate(data["elonlar"])
-                            )
-                        )
+                    send_message(
+                        chat_id,
+                        f"Saqlangan e'lonlar soni: {len(data['elonlar'])}"
+                    )
+
                 else:
                     data = load_data()
                     data["elonlar"].append(text)
                     save_data(data)
                     send_message(
                         chat_id,
-                        "✅ E'lon saqlandi!\n"
-                        f"Jami e'lonlar: {len(data['elonlar'])}"
+                        f"✅ E'lon saqlandi!\n"
+                        f"Jami: {len(data['elonlar'])} ta."
                     )
 
-        except Exception as e:
-            print("Xato:", e)
+        except Exception as error:
+            print("Xato:", error)
+
 
 if __name__ == "__main__":
     main()
