@@ -1,24 +1,29 @@
-name: OLX E'lon Tarqatuvchi
+name: Telegram E'lon Tarqatuvchi
 
 on:
-  schedule:
-    - cron: '0 * * * *'
   workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
 
 jobs:
   distribute:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Loyihani yuklash
+      - name: Kodni yuklash
         uses: actions/checkout@v4
 
-      - name: Python o'rnatish
+      - name: Python sozlash
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Kutubxonalarni o'rnatish
         run: pip install -r requirements.txt
 
       - name: E'lonlarni tarqatish
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          TELEGRAM_SESSION: ${{ secrets.TELEGRAM_SESSION }}
         run: python distribute.py
