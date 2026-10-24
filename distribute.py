@@ -1,14 +1,19 @@
 import os
 import json
+import asyncio
 from pathlib import Path
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 
+# GitHub Secrets orqali olinadi
 API_ID = int(os.environ["API_ID"])
 API_HASH = os.environ["API_HASH"]
 SESSION = os.environ["TELEGRAM_SESSION"]
 
+# E'lonlar fayli
 FILE = Path("elonlar.json")
 
+# Telegram kanallari
 CHANNELS = [
     "@Toshkent_kvartira_ijara_24",
     "@Toshkent_talabalarga_kvartira",
@@ -20,31 +25,42 @@ CHANNELS = [
     "@Kvartira_toshkent_maklersiz_aren",
 ]
 
+
 async def main():
     if not FILE.exists():
-        print("elonlar.json topilmadi")
+        print("XATO: elonlar.json fayli topilmadi.")
         return
 
-    data = json.loads(FILE.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(FILE.read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"E'lonlar faylini o'qishda xato: {e}")
+        return
+
     elonlar = data.get("elonlar", [])
 
     if not elonlar:
-        print("Saqlangan e'lon yo'q")
+        print("Saqlangan e'lon yo'q.")
         return
 
     async with TelegramClient(
-        "user_session",
+        StringSession(SESSION),
         API_ID,
         API_HASH
     ) as client:
+
         for channel in CHANNELS:
             for elon in elonlar:
                 try:
                     await client.send_message(channel, elon)
                     print(f"Yuborildi: {channel}")
+                    await asyncio.sleep(3)
+
                 except Exception as e:
-                    print(f"Yuborilmadi: {channel}: {e}")
+                    print(f"XATO — {channel}: {e}")
+
+    print("Tarqatish yakunlandi.")
+
 
 if __name__ == "__main__":
-    import asyncio
     asyncio.run(main())
